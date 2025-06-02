@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import supabase from '@/lib/supabaseClient'; // Supabase client from @supabase/ssr createBrowserClient
+import { createClient } from '@/lib/supabaseClient'; // Use the createClient function
 
 interface UserContextType {
   user: User | null;
@@ -18,13 +18,34 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const supabase = createClient(); // Create client inside useEffect
+
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => { // Made the listener async
         console.log('UserProvider - onAuthStateChange event:', event); // Log event
         console.log('UserProvider - onAuthStateChange session:', session); // Log session
-        setSession(session);
-        setUser(session?.user || null);
+
+        if (event === 'SIGNED_IN') {
+          // Explicitly get user after sign in event
+          const { data: { user }, error } = await supabase.auth.getUser();
+          if (error) {
+            console.error('UserProvider - Error getting user after sign in:', error.message);
+            setUser(null);
+            setSession(null);
+          } else {
+            console.log('UserProvider - User obtained after sign in:', user);
+            setUser(user);
+            setSession(session);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setSession(null);
+        } else {
+           setSession(session);
+           setUser(session?.user || null);
+        }
+
         setIsLoading(false);
       }
     );
@@ -45,6 +66,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       authListener?.subscription.unsubscribe();
     };
   }, []); // Empty dependency array to run only on mount
+
+  // Add logging for state changes
+  useEffect(() => {
+    console.log('UserProvider State Change - user:', user);
+    console.log('UserProvider State Change - isLoading:', isLoading);
+  }, [user, isLoading]);
 
   return (
     <UserContext.Provider value={{ user, session, isLoading }}>

@@ -13,6 +13,12 @@ import { SearchDialog } from "@/components/search-dialog"
 import { useUser } from "@/context/user-context"
 import supabase from "@/lib/supabaseClient"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -132,20 +138,20 @@ export function Navbar() {
             {isLoading ? (
               <div className="h-9 w-24 animate-pulse rounded-md bg-gray-800"></div>
             ) : user ? (
-              <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.user_metadata?.avatar_url as string | undefined} alt={user.email || 'user avatar'} />
-                  <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                </Avatar>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 border-gray-800 hover:bg-gray-800 hover:text-gray-50"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="h-8 w-8 cursor-pointer">
+                    <AvatarImage src={user.user_metadata?.avatar_url as string | undefined} alt={user.email || 'user avatar'} />
+                    <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <>
                 <Button
@@ -226,24 +232,23 @@ export function Navbar() {
               {isLoading ? (
                 <div className="h-12 w-full animate-pulse rounded-md bg-gray-800"></div>
               ) : user ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Avatar className="h-10 w-10 cursor-pointer mx-auto">
                       <AvatarImage src={user.user_metadata?.avatar_url as string | undefined} alt={user.email || 'user avatar'} />
                       <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
-                    <span className="block w-full py-3 px-4 text-lg font-medium text-white rounded-md border border-gray-800">Welcome, {user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
-                  </div>
-                  <Button
-                    className="w-full py-3 bg-amber-500 text-black hover:bg-amber-600 flex items-center justify-center gap-2"
-                    onClick={() => {
-                      setIsMenuOpen(false)
-                      handleLogout()
-                    }}
-                  >
-                    <LogOut className="h-5 w-5" /> Logout
-                  </Button>
-                </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="center" forceMount>
+                    <DropdownMenuItem onClick={() => {
+                       setIsMenuOpen(false)
+                       handleLogout()
+                     }}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <>
                   <Button
